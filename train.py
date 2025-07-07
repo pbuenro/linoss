@@ -33,9 +33,8 @@ if str(ROOT) not in sys.path:
     sys.path.append(str(ROOT))
 # -----------------------------------------------------------------------
 
-# Assumes this script is run from `collision_mvp/`
-# FIX: Correctly import the base layer from the linoss package
-from linoss_conjunction.model import LinOSSPredictor
+# Assumes this script is run from the repository root
+from linoss.models.LinOSS import LinOSSLayer
 
 
 # ── paths ─────────────────────────────────────────────────────────────
@@ -107,20 +106,17 @@ def main(
     rng = jax.random.PRNGKey(seed)
     rng, init_rng = jax.random.split(rng)
     
-    # FIX: Initialize the LinOSSLayer directly
     model = LinOSSLayer(
         num_oscillators=250,
         readout_dim=1, # Direct scalar output for regression
         nonlin="glu",
         implicit=True
     )
-    
+
     dummy_x = jnp.zeros((batch_size, 720, 5), dtype=jnp.float32)
-    # FIX: Initialize the model directly, not model.layer
     params = model.init(init_rng, dummy_x)
-    
+
     tx = optax.adamw(lr)
-    # FIX: Pass model.apply directly
     state = train_state.TrainState.create(apply_fn=model.apply, params=params, tx=tx)
 
     # --- Define JIT-compiled train and validation steps ---
